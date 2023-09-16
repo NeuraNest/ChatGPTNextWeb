@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useCallback,
   Fragment,
+  ChangeEvent,
 } from "react";
 
 import SendWhiteIcon from "../icons/send-white.svg";
@@ -16,7 +17,7 @@ import ReturnIcon from "../icons/return.svg";
 import CopyIcon from "../icons/copy.svg";
 import LoadingIcon from "../icons/three-dots.svg";
 import PromptIcon from "../icons/prompt.svg";
-import MaskIcon from "../icons/mask.svg";
+import MaskIcon from "../icons/brain.svg";
 import MaxIcon from "../icons/max.svg";
 import MinIcon from "../icons/min.svg";
 import ResetIcon from "../icons/reload.svg";
@@ -34,6 +35,7 @@ import AutoIcon from "../icons/auto.svg";
 import BottomIcon from "../icons/bottom.svg";
 import StopIcon from "../icons/pause.svg";
 import RobotIcon from "../icons/robot.svg";
+import UploadIcon from "../icons/upload.svg";
 
 import {
   ChatMessage,
@@ -325,6 +327,54 @@ function ClearContextDivider() {
   );
 }
 
+interface UploadChatActionProps {
+  text: string;
+  icon: JSX.Element;
+}
+
+const UploadChatAction: React.FC<UploadChatActionProps> = ({ text, icon }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = () => {
+    const fileInput = fileInputRef.current;
+    if (fileInput) {
+      fileInput.click();
+    }
+  };
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(result);
+      } else {
+        console.error("File upload failed");
+      }
+    }
+  };
+
+  return (
+    <>
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
+      <ChatAction text={text} icon={icon} onClick={handleFileUpload} />
+    </>
+  );
+};
+
 function ChatAction(props: {
   text: string;
   icon: JSX.Element;
@@ -533,6 +583,11 @@ export function ChatActions(props: {
           }}
         />
       )}
+
+      <UploadChatAction
+        text="Upload File"
+        icon={<UploadIcon />} // replace with your SVG icon
+      />
     </div>
   );
 }
